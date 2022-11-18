@@ -3,6 +3,7 @@ import * as S3 from 'aws-sdk/clients/s3';
 import * as moment from 'moment';
 import * as crypto from 'crypto-js';
 import axios, { CancelToken } from 'axios';
+import { Signer } from 'aws-sdk';
 
 export enum AWSconfig {
   accessKeyId = 'AKIA2LMVRCLTP6R7QJUC',
@@ -21,9 +22,11 @@ export class StorageService {
     region: AWSconfig.region,
   });
 
-  constructor() {}
+  constructor() { }
+
 
   getImage() {
+    Signer
     var bucketParams = {
       Bucket: AWSconfig.bucketName,
     };
@@ -60,14 +63,35 @@ export class StorageService {
   }
 
   async send() {
-    const access_key = 'XXXX';
-    const secret_key = 'XXXX';
-    const method = 'POST';
-    const service = 'execute-api';
-    const host = 'dfadfadfdafda.execute-api.us-east-2.amazonaws.com';
-    const region = 'us-east-2';
+    const access_key = AWSconfig.accessKeyId;
+    const secret_key = AWSconfig.secretAccessKey;
+    const method = 'GET';
+    const service = 's3';
+    const host = 'leo-private-test.s3.amazonaws.com';
+    const region = 'us-east-1';
     const base = 'https://';
     const content_type = 'application/json';
+
+
+    // var region = '';
+    // var method = 'GET';
+    // var service = 's3';
+    // var host = '';
+    var endpoint = 'https://leo-private-test.s3.amazonaws.com';
+    // var request_parameters = '';
+    // const content_type = 'application/json';
+
+
+    // var access_key = 
+    // var secret_key = 
+
+    const amz_date = moment().utc().format("yyyyMMDDTHHmmss") + "Z"
+    const date_stamp = moment().utc().format("yyyyMMDD")
+
+    // ************* TASK 1: CREATE A CANONICAL REQUEST *************
+    var canonical_uri = '/perfil.png';
+    // var canonical_querystring = request_parameters;
+    // var payload_hash = sha256("");
 
     // DynamoDB requires an x-amz-target header that has this format:
     //     DynamoDB_<API version>.<operationName>
@@ -94,8 +118,9 @@ export class StorageService {
     // Step 2: Create canonical URI--the part of the URI from domain to query
     // string (use '/' if no path)
     // Create a date for headers and the credential string
-    const amz_date = moment().utc().format('yyyyMMDDThhmmss') + 'Z';
-    const date_stamp = moment().utc().format('yyyyMMDD');
+
+    // const  = moment().utc().format('yyyyMMDDThhmmss') + 'Z';
+    // const  = moment().utc().format('yyyyMMDD');
 
     //// Step 3: Create the canonical query string. In this example, request
     // parameters are passed in the body of the request and the query string
@@ -106,7 +131,7 @@ export class StorageService {
     // Step 6: Create payload hash. In this example, the payload (body of
     // the request) contains the request parameters.
     //const payload_hash = hashlib.sha256(request_parameters.encode('utf-8')).hexdigest()
-    const payload_hash = crypto.SHA256('request_parameters');
+    const payload_hash = crypto.SHA256('');
 
     // Step 4: Create the canonical headers. Header names must be trimmed
     // and lowercase, and sorted in code point order from low to high.
@@ -133,7 +158,7 @@ export class StorageService {
     const canonical_request =
       method +
       '\n' +
-      'canonical_uri' +
+      canonical_uri +
       '\n' +
       canonical_querystring +
       '\n' +
@@ -190,7 +215,7 @@ export class StorageService {
     // header, the headers must be included in the canonical_headers and signed_headers values, as
     // noted earlier. Order here is not significant.
     const headers = {
-      'X-Amz-Content-Sha256': payload_hash,
+      'X-Amz-Content-Sha256': payload_hash.toString(),
       'X-Amz-Date': amz_date,
       //'X-Amz-Target':amz_target,
       Authorization: authorization_header,
@@ -198,19 +223,19 @@ export class StorageService {
     };
 
     // ************* SEND THE REQUEST *************
-    // var response = await axios({
-    //     method: method,
-    //     baseURL: base + host,
-    //     url: 'canonical_uri',
-    //     // data:request_parameters,
-    //     headers: headers,
-    // });
-    // console.log(response)
+    var response = await axios({
+      method: method,
+      baseURL: base + host,
+      url: canonical_uri,
+      // data: request_parameters,
+      headers: headers,
+    });
+    console.log(response)
   }
 
 
   prueba3() {
-    function sign(key:any, msg: any) {
+    function sign(key: any, msg: any) {
       return crypto.HmacSHA256(key, msg);
     }
 
@@ -244,7 +269,7 @@ export class StorageService {
     const datestamp = moment().utc().format("yyyyMMDD")
 
     // ************* TASK 1: CREATE A CANONICAL REQUEST *************
-    var canonical_uri = 'perfil.png';
+    var canonical_uri = '/perfil.png';
     var canonical_querystring = request_parameters;
     var payload_hash = sha256("");
 
@@ -257,7 +282,7 @@ export class StorageService {
       '\n' +
       canonical_uri +
       '\n' +
-      // canonical_querystring +
+      canonical_querystring +
       '\n' +
       canonical_headers +
       '\n' +
@@ -298,12 +323,12 @@ export class StorageService {
       signature;
     var headers = {
       'x-amz-date': amzdate,
-      'X-Amz-Content-Sha256': payload_hash.toString(),
+      'x-amz-content-Sha256': payload_hash.toString(),
       Authorization: authorization_header,
       host: host,
-      'Content-Type':content_type
+      'Content-Type': content_type
     };
-    var request_url = endpoint+'/'+canonical_uri //'?' + canonical_querystring;
+    var request_url = endpoint + '/' + canonical_uri //'?' + canonical_querystring;
 
     axios.get(request_url, {
       headers
